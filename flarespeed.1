@@ -1,0 +1,162 @@
+.TH FLARESPEED 1 2026-10-24 "flarespeed 1.0.0" "User Commands"
+.SH NAME
+flarespeed \- measure internet speed against Cloudflare's network
+.SH SYNOPSIS
+.B flarespeed
+.RB [ \-duration
+.IR time ]
+.RB [ \-streams
+.IR n ]
+.RB [ \-pings
+.IR n ]
+.RB [ \-json ]
+.SH DESCRIPTION
+.B flarespeed
+measures the latency, jitter, download and upload speed of an internet
+connection against Cloudflare's speed test service at
+.IR speed.cloudflare.com ,
+using the nearest Cloudflare data center.
+.PP
+When standard output is a terminal it shows a live view: one card each for
+ping, download and upload, and a chart of the test in progress.
+The view is drawn in place below the prompt and stays on screen as a
+summary when the program exits.
+Otherwise, or with
+.BR \-json ,
+it runs the test silently and prints the results as JSON.
+.PP
+A run has three steps:
+.TP
+.B Latency
+The time to first byte of an empty download on a warm connection, minus the
+processing time the server reports in its
+.B Server-Timing
+header.
+The median of the samples is reported, along with jitter, the mean
+difference between consecutive samples.
+.TP
+.B Download and upload
+Several HTTP/1.1 connections transfer 25\~MB requests back to back for the
+chosen duration.
+The first 20% of the test (at most 2 seconds), while connections ramp up,
+is left out of the reported rate.
+.TP
+.B Loaded latency
+While each transfer test saturates the link, latency is sampled every
+250\~ms.
+Loaded latency much higher than idle latency means the connection suffers
+from bufferbloat.
+.SH OPTIONS
+Options can start with one dash or two, and take their value either as the
+next argument or after an equals sign.
+.TP
+.BI \-duration " time"
+How long to run each of the download and upload tests, as a number with a
+unit such as
+.BR 10s ,
+.B 1m30s
+or
+.BR 2.5m .
+The default is 10s and the minimum 2s.
+.TP
+.BI \-streams " n"
+The number of parallel connections in each direction, from 1 to 1000.
+The default is 6.
+.TP
+.BI \-pings " n"
+The number of idle latency samples, at least 2.
+The default is 20.
+.TP
+.B \-json
+Print the results as JSON instead of showing the live view.
+This is the default when standard output is not a terminal.
+.TP
+.BR \-h ", " \-help
+Show a summary of the options.
+.SH KEYS
+.TP
+.B r
+Run the test again.
+.TP
+.BR q ", " Esc ", " Ctrl+C
+Quit, leaving the results on screen.
+.SH JSON OUTPUT
+The report is an object with these members:
+.TP
+.B server
+The Cloudflare data center:
+.B colo
+(its IATA airport code) and
+.BR city .
+Absent if the data center could not be identified.
+.TP
+.B client
+The connection being tested:
+.BR ip ,
+.BR asn ,
+.B org
+(the network's name),
+.B city
+and
+.BR country .
+Absent along with
+.BR server .
+.TP
+.B latency
+.BR median_ms ,
+.BR jitter_ms ,
+.B min_ms
+and
+.BR max_ms .
+.TP
+.BR download ", " upload
+.B mbps
+(megabits per second),
+.B bytes
+(the total transferred) and
+.B loaded_latency_ms
+(the median latency while the link was saturated, or 0 if none was
+measured).
+.SH ENVIRONMENT
+.TP
+.BR HTTPS_PROXY ", " https_proxy ", " NO_PROXY
+Proxy settings, as for
+.BR curl (1).
+.TP
+.B NO_COLOR
+If set to a true value (1, t, true), the live view uses no colors.
+.TP
+.BR CLICOLOR ", " CLICOLOR_FORCE
+Ask for colors even where they would not be used otherwise.
+.TP
+.BR TERM ", " COLORTERM
+Used, together with the terminfo database and
+.B tmux info
+inside
+.BR tmux (1),
+to choose between truecolor, 256-color and 16-color output.
+.TP
+.B FLARESPEED_BASE_URL
+Test against another server implementing the same endpoints
+.RB ( /meta ,
+.B /__down
+and
+.BR /__up )
+instead of https://speed.cloudflare.com.
+.SH EXIT STATUS
+0 if the test completed, 1 if it failed or was interrupted, and 2 for an
+invalid command line.
+.SH EXAMPLES
+Run a longer test:
+.PP
+.RS
+.B flarespeed \-duration 30s
+.RE
+.PP
+Print just the download speed:
+.PP
+.RS
+.B flarespeed \-json | jq .download.mbps
+.RE
+.SH SEE ALSO
+.BR curl (1)

@@ -1,0 +1,6 @@
+/flarespeed
+*.o
+*.d
+/tests/run_tests
+/tests/fuzz/*
+!/tests/fuzz/*.c
