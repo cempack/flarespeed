@@ -437,6 +437,7 @@ static int run_json(config_t cfg, const char *base_url)
 
 int main(int argc, char **argv)
 {
+	fp_init();
 	options_t o = {{10 * NS_PER_SEC, 6, 20}, 6, 20, false};
 	parse_args(argc, argv, &o);
 

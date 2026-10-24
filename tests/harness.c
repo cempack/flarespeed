@@ -2,9 +2,10 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include <stdlib.h>
+#include "util.h"
 
 static int failures;
 static const char *current;
@@ -52,6 +53,7 @@ int main(int argc, char **argv)
 #undef ENTRY
 	};
 
+	fp_init();
 	int ran = 0;
 	for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); i++) {
 		if (argc > 1 && !strstr(tests[i].name, argv[1]))

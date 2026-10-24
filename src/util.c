@@ -158,3 +158,16 @@ int64_t mono_ns(void)
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return (int64_t)ts.tv_sec * NS_PER_SEC + ts.tv_nsec;
 }
+
+void fp_init(void)
+{
+#if defined(__i386__) && !defined(__SSE2_MATH__) && defined(__GNUC__)
+	/* The x87 FPU rounds to a 64-bit mantissa by default, and rounding that
+	 * again to a double can land one ulp away from the correctly rounded
+	 * result Go computes with SSE2. Set its precision control to 53 bits. */
+	unsigned short cw;
+	__asm__ volatile("fnstcw %0" : "=m"(cw));
+	cw = (unsigned short)((cw & ~0x300u) | 0x200u);
+	__asm__ volatile("fldcw %0" : : "m"(cw));
+#endif
+}

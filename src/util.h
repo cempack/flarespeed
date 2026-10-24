@@ -63,6 +63,11 @@ char *buf_take(buf_t *b);
 /* Monotonic clock in nanoseconds. */
 int64_t mono_ns(void);
 
+/* Makes floating-point arithmetic round to double precision on the x87 FPU,
+ * as it does everywhere else, so results match Go's bit for bit. Call it
+ * before any floating-point work. */
+void fp_init(void);
+
 /* The program name used in diagnostics. */
 extern const char *progname;
 
